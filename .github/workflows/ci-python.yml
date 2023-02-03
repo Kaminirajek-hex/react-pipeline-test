@@ -1,0 +1,28 @@
+name: ci-python
+'on':
+  push:
+    branches:
+      - main
+    paths:
+      - '**/pythonfolder/**'
+env:
+  DOCKER_FILE_PATH: ./pythonfolder/Dockerfile
+  DOCKER_BUILD_CONTEXT: pythonfolder
+  CONTAINER_NAME: python-pipeline-test
+  REPOSITORY_NAME: python-pipeline-test
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.CR_LOGIN_SERVER }}
+          username: ${{ secrets.CR_USERNAME }}
+          password: ${{ secrets.CR_PASSWORD }}
+      - name: Build, test and push image to container registry
+        run: |-
+          docker build ${{ env.DOCKER_BUILD_CONTEXT }} -f ${{ env.DOCKER_FILE_PATH }} -t ${{ secrets.CR_LOGIN_SERVER }}/${{ env.REPOSITORY_NAME }}:pyth
+          docker push ${{ secrets.CR_LOGIN_SERVER }}/${{ env.REPOSITORY_NAME }}:pyth
